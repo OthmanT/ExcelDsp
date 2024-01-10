@@ -6,7 +6,7 @@ namespace ExcellentDsp.Painter;
 public class Plugin : BaseUnityPlugin
 {
     public void Awake()
-        => Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_NAME} loaded");
+        => Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_NAME} v{MyPluginInfo.PLUGIN_VERSION} loaded");
 
     public void OnDestroy()
         => Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_NAME} unloaded");
