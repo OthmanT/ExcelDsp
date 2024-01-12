@@ -1,6 +1,6 @@
 ﻿using HarmonyLib;
 
-namespace ExcellentDsp.Painter.Patches;
+namespace ExcelDsp.Painter.Patches;
 
 /// <summary>Patch for <see cref="UIBuildMenu"/></summary>
 [HarmonyPatch(typeof(UIBuildMenu))]
