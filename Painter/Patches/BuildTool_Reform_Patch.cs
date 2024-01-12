@@ -8,6 +8,12 @@ internal static class BuildTool_Reform_Patch
 {
     /// <summary>Before each update when foundation cursor is active</summary>
     [HarmonyPrefix, HarmonyPatch(nameof(BuildTool_Reform.ReformAction))]
-    public static void ReformAction_Prefix()
-        => UIRealtimeTip.Popup(nameof(ReformAction_Prefix));
+    public static bool ReformAction_Prefix()
+    {
+        if(!Shared.IsEnabled)
+            return true;
+
+        UIRealtimeTip.Popup(nameof(ReformAction_Prefix));
+        return false;
+    }
 }

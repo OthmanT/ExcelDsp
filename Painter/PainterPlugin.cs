@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using HarmonyLib;
 
 namespace ExcellentDsp.Painter;
@@ -8,6 +9,7 @@ namespace ExcellentDsp.Painter;
 public class PainterPlugin : BaseUnityPlugin
 {
     private Harmony? _harmony;
+    private ConfigEntry<KeyboardShortcut>? _enableKey;
 
     /// <summary>Unique id</summary>
     public const string Id = "055eeac2-b236-46ae-9ced-26f582094ead";
@@ -20,6 +22,8 @@ public class PainterPlugin : BaseUnityPlugin
     {
         Shared.Logger = Logger;
         Logger.LogInfo($"Plugin {Name} v{Shared.Version} loaded");
+
+        _enableKey = Config.Bind("Keyboard Shortcuts", "EnableKey", KeyboardShortcut.Deserialize("D + LeftControl"), "Keyboard shortcut to enable/disable painting");
 
         _harmony = new Harmony(Id);
         _harmony.PatchAll(typeof(PainterPlugin).Assembly);
@@ -41,4 +45,11 @@ public class PainterPlugin : BaseUnityPlugin
         _harmony = null;
     }
 #endif
+
+    /// <summary>Update game logic each frame</summary>
+    public void Update()
+    {
+        if(_enableKey is not null && _enableKey.Value.IsDown())
+            Shared.IsEnabled = !Shared.IsEnabled;
+    }
 }
