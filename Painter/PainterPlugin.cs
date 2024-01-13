@@ -30,7 +30,7 @@ public class PainterPlugin : BaseUnityPlugin
         _harmony.PatchAll(typeof(PainterPlugin).Assembly);
 
 #if DEBUG
-        Logger.LogDebug($"Debug build");
+        Logger.LogInfo($"Debug build");
 #else
         _harmony = null;
 #endif
@@ -53,7 +53,7 @@ public class PainterPlugin : BaseUnityPlugin
         if(_enableKey is not null && _enableKey.Value.IsDown())
         {
             FoundationDrawer.IsEnabled = !FoundationDrawer.IsEnabled;
-            Logger.LogDebug($"Enabled: {FoundationDrawer.IsEnabled}");
+            Logger.LogInfo($"Enabled: {FoundationDrawer.IsEnabled}");
         }
     }
 }

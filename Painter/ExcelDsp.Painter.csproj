@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFramework>net48</TargetFramework>
 		<AssemblyName>ExcelDsp.Painter</AssemblyName>
 		<BepInExPluginGuid>055eeac2-b236-46ae-9ced-26f582094ead</BepInExPluginGuid>
 		<Description>DSP plugin to easily paint foundations</Description>
