@@ -28,6 +28,6 @@ internal static class BuildTool_Reform_Patch
 
     /// <summary>Before exiting the foundation build mode</summary>
     [HarmonyPrefix, HarmonyPatch(nameof(BuildTool_Reform._OnClose))]
-    public static void OnClose_Prefix()
-        => FoundationDrawer.Reset();
+    public static void OnClose_Prefix(BuildTool_Reform __instance)
+        => FoundationDrawer.Reset(__instance);
 }
