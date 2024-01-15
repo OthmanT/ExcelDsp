@@ -5,7 +5,9 @@ namespace ExcelDsp.Painter.Extensions;
 
 internal static class PlanetGridExtensions
 {
-    private const float Step = 0.2f;
+    private const int Step = 1;
+    private const float PartScale = 5f;
+    private const float Pi2 = Mathf.PI * 2;
 
     /// <summary>Compute snapped grid segments in a rectangle</summary>
     /// <param name="grid"><see cref="PlanetGrid"/></param>
@@ -18,36 +20,49 @@ internal static class PlanetGridExtensions
     /// <returns>Number of valid <paramref name="reformPoints"/></returns>
     public static int ReformSnapRect(this PlanetGrid grid, PlatformSystem platform, Vector3 startPos, Vector3 endPos, ref Vector3[] reformPoints, ref int[] reformIndices, out Vector3 reformCenter)
     {
+        float latIndexPartMax = platform.latitudeCount / 10;
         Segment start = Segment.FromPosition(grid, startPos);
         Segment end = Segment.FromPosition(grid, endPos);
 
-        Range latRange = Range.Create(start.LatIndex, end.LatIndex);
-        Range longRange = Range.Create(start.LongIndex, end.LongIndex);
+        if(!end.IsValid(latIndexPartMax, start.LongsAtLat))
+            end = start;
 
-        float latMax = platform.latitudeCount / 10;
-        Range latValidRange = new(-latMax, latMax);
+        Range latRange = Range.Create(start.LatIndexInt, end.LatIndexInt);
+        Range longRange = Range.Create(start.LongIndexInt, end.LongIndexInt);
 
         int indexCount = 0;
         int pointCount = 0;
 
-        for(float latIndex = latRange.Min; latIndex <= latRange.Max; latIndex += Step)
+        for(int latIndex = latRange.Min; latIndex <= latRange.Max; latIndex += Step)
         {
-            for(float longIndex = longRange.Min; longIndex <= longRange.Max; longIndex += Step)
-            {
-                Segment seg = Segment.FromIndices(grid, latIndex, longIndex);
+            if(latIndex == 0)
+                continue;
 
-                bool isValid = latValidRange.ContainsExclusive(seg.LatIndex) && seg.SegmentCount == start.SegmentCount;
-                int reformIndex = isValid ? platform.GetReformIndexForSegment(seg.LatIndex, seg.LongIndex) : -1;
+            for(int longIndex = longRange.Min; longIndex <= longRange.Max; longIndex += Step)
+            {
+                Segment seg = Segment.FromIndex(grid, latIndex, longIndex);
+                if(!seg.IsValid(latIndexPartMax, start.LongsAtLat))
+                    continue;
+
+                // TODO: Off-by-one at tropic lines
+                int reformIndex = platform.GetReformIndexForSegment(seg.LatIndexPart, seg.LongIndexPart);
                 AddItem(ref reformIndices, ref indexCount, reformIndex);
 
-                bool needsReform = isValid && !platform.IsTerrainReformed(platform.GetReformType(reformIndex));
-                if(needsReform)
+                int reformType = platform.GetReformType(reformIndex);
+                if(!platform.IsTerrainReformed(reformType))
                     AddItem(ref reformPoints, ref pointCount, seg.GetPosition());
             }
         }
 
         reformCenter = start.GetPosition();
         return pointCount;
+    }
+
+    public static int GetLongsAtLat(this PlanetGrid grid, float latIndexPart)
+    {
+        int latIndex = Mathf.FloorToInt(Mathf.Abs(latIndexPart));
+        int count = PlanetGrid.DetermineLongitudeSegmentCount(latIndex, grid.segment);
+        return count;
     }
 
     private static void AddItem<T>(ref T[] array, ref int index, T item)
@@ -64,39 +79,42 @@ internal static class PlanetGridExtensions
     {
         public float LatAngle;
         public float LongAngle;
-        public float LatIndex;
-        public float LongIndex;
-        public int SegmentCount;
+        public int LatIndexInt;
+        public int LongIndexInt;
+        public float LatIndexPart;
+        public float LongIndexPart;
+        public int LongsAtLat;
 
-        public static Segment FromAngles(PlanetGrid grid, float latAngle, float longAngle)
+        public static Segment FromAngle(PlanetGrid grid, float latAngle, float longAngle)
         {
             Segment seg = new()
             {
                 LatAngle = latAngle,
                 LongAngle = longAngle,
-                LatIndex = latAngle / (Mathf.PI * 2f) * grid.segment
+                LatIndexInt = AngleToIndexInt(latAngle, grid.segment)
             };
+            seg.LatIndexPart = IndexIntToPart(seg.LatIndexInt);
+            seg.LongsAtLat = grid.GetLongsAtLat(seg.LatIndexPart);
 
-            int latIndexInt = Mathf.FloorToInt(Mathf.Abs(seg.LatIndex));
-            seg.SegmentCount = PlanetGrid.DetermineLongitudeSegmentCount(latIndexInt, grid.segment);
-
-            seg.LongIndex = longAngle / (Mathf.PI * 2f) * seg.SegmentCount;
+            seg.LongIndexInt = AngleToIndexInt(longAngle, seg.LongsAtLat);
+            seg.LongIndexPart = IndexIntToPart(seg.LongIndexInt);
             return seg;
         }
 
-        public static Segment FromIndices(PlanetGrid grid, float latIndex, float longIndex)
+        public static Segment FromIndex(PlanetGrid grid, int latIndexInt, int longIndexInt)
         {
             Segment seg = new()
             {
-                LatIndex = latIndex,
-                LongIndex = longIndex,
-                LatAngle = latIndex / grid.segment * (Mathf.PI * 2f),
+                LatIndexInt = latIndexInt,
+                LatIndexPart = IndexIntToPart(latIndexInt),
+                LongIndexInt = longIndexInt,
+                LongIndexPart = IndexIntToPart(longIndexInt),
             };
 
-            int latIndexInt = Mathf.FloorToInt(Mathf.Abs(latIndex));
-            seg.SegmentCount = PlanetGrid.DetermineLongitudeSegmentCount(latIndexInt, grid.segment);
+            seg.LatAngle = IndexPartToAngle(seg.LatIndexPart, grid.segment);
+            seg.LongsAtLat = grid.GetLongsAtLat(seg.LatIndexPart);
 
-            seg.LongAngle = longIndex / seg.SegmentCount * (Mathf.PI * 2f);
+            seg.LongAngle = IndexPartToAngle(seg.LongIndexPart, seg.LongsAtLat);
             return seg;
         }
 
@@ -105,7 +123,7 @@ internal static class PlanetGridExtensions
             Vector3 normalized = position.normalized;
             float latAngle = Mathf.Asin(normalized.y);
             float longAngle = Mathf.Atan2(normalized.x, 0f - normalized.z);
-            return FromAngles(grid, latAngle, longAngle);
+            return FromAngle(grid, latAngle, longAngle);
         }
 
         public readonly Vector3 GetPosition()
@@ -116,17 +134,44 @@ internal static class PlanetGridExtensions
             float longCos = Mathf.Cos(LongAngle);
             return new Vector3(latCos * longSin, latSin, latCos * (0f - longCos));
         }
+
+        public readonly bool IsValid(float latIndexPartMax, int longsAtLat)
+        {
+            return LatIndexPart < latIndexPartMax
+                && LatIndexPart > -latIndexPartMax
+                && LatIndexInt != 0
+                && LongIndexInt != 0
+                && LongsAtLat == longsAtLat;
+        }
+
+        public override readonly string ToString()
+            => $"({LatIndexInt},{LongIndexInt})";
+
+        private static int AngleToIndexInt(float angle, int segments)
+        {
+            float rawIndexPart = angle / Pi2 * segments;
+            return IndexPartToInt(rawIndexPart);
+        }
+
+        private static float IndexPartToAngle(float index, int segments)
+            => index / segments * Pi2;
+
+        private static int IndexPartToInt(float indexPart)
+        {
+            float scaled = indexPart * PartScale;
+            if(scaled > 0)
+                return Mathf.CeilToInt(scaled);
+            else
+                return Mathf.FloorToInt(scaled);
+        }
+
+        private static float IndexIntToPart(int indexInt)
+            => indexInt / PartScale;
     }
 
-    private record struct Range(float Min, float Max)
+    private record struct Range(int Min, int Max)
     {
-        public readonly bool ContainsInclusive(float value)
-            => value >= Min && value <= Max;
-
-        public readonly bool ContainsExclusive(float value)
-            => value > Min && value < Max;
-
-        public static Range Create(float a, float b)
+        public static Range Create(int a, int b)
         {
             if(a < b)
                 return new Range(a, b);
