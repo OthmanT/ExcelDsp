@@ -11,6 +11,7 @@ public class PainterPlugin : BaseUnityPlugin
 {
     private Harmony? _harmony;
     private ConfigEntry<KeyboardShortcut>? _enableKey;
+    private ConfigEntry<KeyboardShortcut>? _shortestPathKey;
 
     /// <summary>Display name</summary>
     public const string Name = "Foundation Painter";
@@ -25,6 +26,7 @@ public class PainterPlugin : BaseUnityPlugin
         Logger.LogInfo($"{Name} v{Shared.Version} loaded");
 
         _enableKey = Config.Bind("Keyboard Shortcuts", "EnableKey", KeyboardShortcut.Deserialize("D + LeftControl"), "Keyboard shortcut to enable/disable foundation painting");
+        _shortestPathKey = Config.Bind("Keyboard Shortcuts", "ShortestPathKey", KeyboardShortcut.Deserialize("P + LeftControl"), "Keyboard shortcut to toggle between the shortest or longest path");
 
         _harmony = new Harmony(Id);
         _harmony.PatchAll(typeof(PainterPlugin).Assembly);
@@ -53,7 +55,15 @@ public class PainterPlugin : BaseUnityPlugin
         if(_enableKey is not null && _enableKey.Value.IsDown())
         {
             FoundationDrawer.IsEnabled = !FoundationDrawer.IsEnabled;
-            Logger.LogInfo($"Enabled: {FoundationDrawer.IsEnabled}");
+            string status = FoundationDrawer.IsEnabled ? "Enabled" : "Disabled";
+            Logger.LogInfo(status);
+        }
+
+        if(_shortestPathKey is not null && _shortestPathKey.Value.IsDown())
+        {
+            FoundationDrawer.UseShortestPath = !FoundationDrawer.UseShortestPath;
+            string path = FoundationDrawer.UseShortestPath ? "shortest" : "longest";
+            Logger.LogInfo($"Using {path} path");
         }
     }
 }

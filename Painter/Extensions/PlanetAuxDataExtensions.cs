@@ -9,13 +9,14 @@ internal static class PlanetAuxDataExtensions
     /// <param name="aux"><see cref="PlanetAuxData"/></param>
     /// <param name="startPos">Rectangle start position</param>
     /// <param name="endPos">Rectangle end position</param>
+    /// <param name="useShortestPath">Whether to use the shortest or longest arc path between the endpoints</param>
     /// <param name="reformPoints">Output points on the planetary surface that require reformation (excludes already reformed points)</param>
     /// <param name="reformIndices">Output reformation indices in the rectangle</param>
     /// <param name="reformCenter">Center point on the planetary surface</param>
     /// <returns>Number of valid <paramref name="reformPoints"/></returns>
-    public static int ReformSnapRect(this PlanetAuxData aux, Vector3 startPos, Vector3 endPos, ref Vector3[] reformPoints, ref int[] reformIndices, out Vector3 reformCenter)
+    public static int ReformSnapRect(this PlanetAuxData aux, Vector3 startPos, Vector3 endPos, bool useShortestPath, ref Vector3[] reformPoints, ref int[] reformIndices, out Vector3 reformCenter)
     {
-        int num = aux.mainGrid.ReformSnapRect(aux.planet.factory.platformSystem, startPos, endPos, ref reformPoints, ref reformIndices, out reformCenter);
+        int num = aux.mainGrid.ReformSnapRect(aux.planet.factory.platformSystem, startPos, endPos, useShortestPath, ref reformPoints, ref reformIndices, out reformCenter);
         float num2 = aux.planet.radius + 0.2f;
         for(int i = 0; i < num; i++)
         {

@@ -13,13 +13,16 @@ internal static class FoundationDrawer
     /// <summary>Whether this is currently enabled, overriding the vanilla foundation logic</summary>
     public static bool IsEnabled { get; set; }
 
+    /// <summary>Whether to paint over the shortest or longest path between the selected corners</summary>
+    public static bool UseShortestPath { get; set; } = true;
+
     /// <summary>Update the target world position and tile each frame (when enabled and active) </summary>
     /// <param name="reformTool">Vanilla foundation build tool</param>
     public static void UpdateRaycast(BuildTool_Reform reformTool)
     {
         reformTool.brushSize = 1;
         reformTool.cursorValid = Raycast(reformTool.mouseRay, out Vector3 target);
-        SelectRange(reformTool, target, target);
+        SelectRange(reformTool, target, target, true);
 
         reformTool.controller.cmd = reformTool.controller.cmd with
         {
@@ -42,7 +45,7 @@ internal static class FoundationDrawer
             }
             else
             {
-                SelectRange(reformTool, _start.Value, reformTool.cursorTarget);
+                SelectRange(reformTool, _start.Value, reformTool.cursorTarget, UseShortestPath);
             }
         }
         else if(reformTool.cursorValid && VFInput._buildConfirm.onDown)
@@ -70,12 +73,13 @@ internal static class FoundationDrawer
     public static void Reset(BuildTool_Reform reformTool)
     {
         _start = null;
+        UseShortestPath = true;
         Array.Resize(ref reformTool.cursorPoints, 100);
         Array.Resize(ref reformTool.cursorIndices, 100);
     }
 
-    private static void SelectRange(BuildTool_Reform reformTool, Vector3 start, Vector3 end)
-        => reformTool.cursorPointCount = reformTool.planet.aux.ReformSnapRect(start, end, ref reformTool.cursorPoints, ref reformTool.cursorIndices, out reformTool.cursorTarget);
+    private static void SelectRange(BuildTool_Reform reformTool, Vector3 start, Vector3 end, bool useShortestPath)
+        => reformTool.cursorPointCount = reformTool.planet.aux.ReformSnapRect(start, end, useShortestPath, ref reformTool.cursorPoints, ref reformTool.cursorIndices, out reformTool.cursorTarget);
 
     private static bool Raycast(Ray ray, out Vector3 target)
     {

@@ -5,6 +5,9 @@
 /// <param name="Max">Maximum value</param>
 internal record struct Range(int Min, int Max)
 {
+    /// <summary>Difference between <see cref="Min"/> and <see cref="Max"/></summary>
+    public readonly int Width => Max - Min;
+
     /// <summary>Create from unordered endpoints</summary>
     /// <param name="a">Endpoint number</param>
     /// <param name="b">Endpoint number</param>
