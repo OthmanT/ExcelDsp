@@ -7,6 +7,7 @@ namespace ExcelDsp.Painter.Patches;
 [HarmonyPatch(typeof(BuildTool_Reform))]
 internal static class BuildTool_Reform_Patch
 {
+    /// <summary>Before each raycast update when foundation cursor is active</summary>
     [HarmonyPrefix, HarmonyPatch(nameof(BuildTool_Reform.UpdateRaycast))]
     public static bool UpdateRaycast_Prefix(BuildTool_Reform __instance)
     {

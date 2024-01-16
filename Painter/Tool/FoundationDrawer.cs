@@ -13,6 +13,8 @@ internal static class FoundationDrawer
     /// <summary>Whether this is currently enabled, overriding the vanilla foundation logic</summary>
     public static bool IsEnabled { get; set; }
 
+    /// <summary>Update the target world position and tile each frame (when enabled and active) </summary>
+    /// <param name="reformTool">Vanilla foundation build tool</param>
     public static void UpdateRaycast(BuildTool_Reform reformTool)
     {
         reformTool.brushSize = 1;
