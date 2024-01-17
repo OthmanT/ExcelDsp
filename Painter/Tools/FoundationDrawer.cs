@@ -40,7 +40,9 @@ internal static class FoundationDrawer
         if(VFInput.onGUIOperate)
             return;
 
-        UICursor.SetCursor(ECursor.Reform);
+        ECursor cursor = reformTool.cursorValid ? ECursor.Reform : ECursor.Ban;
+        UICursor.SetCursor(cursor);
+
         string? info = null;
 
         if(_start.HasValue)
@@ -57,7 +59,6 @@ internal static class FoundationDrawer
                 if(VFInput._buildConfirm.onDown)
                 {
                     ApplyReform(reformTool);
-                    Reset(reformTool);
                 }
                 else
                 {
@@ -99,9 +100,8 @@ internal static class FoundationDrawer
         target = Vector3.zero;
         if(VFInput.onGUIOperate || !VFInput.inScreen)
             return false;
-        ;
 
-        int layerMask = 528;
+        const int layerMask = 528;
         bool hitGround = Physics.Raycast(ray, out RaycastHit hitInfo, 400f, layerMask, QueryTriggerInteraction.Collide);
 
         if(!hitGround)
@@ -111,7 +111,7 @@ internal static class FoundationDrawer
         }
 
         if(!hitGround)
-            return true;
+            return false;
 
         target = hitInfo.point;
         return true;
@@ -119,8 +119,17 @@ internal static class FoundationDrawer
 
     private static void ApplyReform(BuildTool_Reform reformTool)
     {
-        VFAudio.Create("reform-terrain", null, reformTool.reformCenterPoint, true, 4);
+        if(!ConsumeFoundation(reformTool))
+            return;
 
+        VFAudio.Create("reform-terrain", null, reformTool.reformCenterPoint, true, 4);
+        FlattenTerrain(reformTool);
+        SetReformProps(reformTool);
+        Reset(reformTool);
+    }
+
+    private static void FlattenTerrain(BuildTool_Reform reformTool)
+    {
         reformTool.factory.BeginFlattenTerrain();
         Bounds tileBounds = new(Vector3.zero, Vector3.one * TileRadius * 2);
 
@@ -131,7 +140,10 @@ internal static class FoundationDrawer
         }
 
         reformTool.factory.EndFlattenTerrain(true);
+    }
 
+    private static void SetReformProps(BuildTool_Reform reformTool)
+    {
         PlatformSystem platformSystem = reformTool.factory.platformSystem;
         foreach(int cursorIndex in reformTool.cursorIndices)
         {
@@ -146,5 +158,35 @@ internal static class FoundationDrawer
                 platformSystem.SetReformColor(cursorIndex, reformTool.brushColor);
             }
         }
+    }
+
+    private static bool ConsumeFoundation(BuildTool_Reform reformTool)
+    {
+        Player player = reformTool.player;
+        int itemId = reformTool.handItem.ID;
+        int availableItems = player.package.GetItemCount(itemId) + player.inhandItemCount;
+        int neededItems = reformTool.cursorPointCount;
+
+        if(availableItems < neededItems)
+        {
+            UIRealtimeTip.Popup("物品不足".Translate(), true, 1); // Lack of item
+            return false;
+        }
+
+        int[] consumeRegister = GameMain.statistics.production.factoryStatPool[reformTool.factory.index].consumeRegister;
+        consumeRegister[itemId] += neededItems;
+
+        GameMain.gameScenario?.NotifyOnBuild(reformTool.planet.id, itemId, 0);
+        GameMain.history.MarkItemBuilt(itemId, neededItems);
+
+        if(player.inhandItemCount > 0)
+        {
+            int usedCount = Math.Min(neededItems, player.inhandItemCount);
+            player.UseHandItems(usedCount, out int _);
+            neededItems -= usedCount;
+        }
+
+        player.package.TakeTailItems(ref itemId, ref neededItems, out int _);
+        return true;
     }
 }
