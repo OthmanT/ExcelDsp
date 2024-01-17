@@ -1,7 +1,7 @@
 ﻿using ExcelDsp.Painter.Extensions;
 using UnityEngine;
 
-namespace ExcelDsp.Painter.Utility;
+namespace ExcelDsp.Painter.Grids;
 
 /// <summary>Single tile on a <see cref="PlanetGrid"/></summary>
 internal struct GridTile

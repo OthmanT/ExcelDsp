@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using ExcelDsp.Painter.Utility;
+using UnityEngine;
 
-namespace ExcelDsp.Painter.Utility;
+namespace ExcelDsp.Painter.Grids;
 
 /// <summary>One co-ordinate (of two) for a <see cref="GridTile"/></summary>
 internal struct PolarCoordinate
@@ -82,7 +83,7 @@ internal struct PolarCoordinate
     private static int SegmentToElement(float segment)
     {
         float element = segment * ElementsPerSegment;
-        if(element > 0)
+        if (element > 0)
             return Mathf.CeilToInt(element);
         else
             return Mathf.FloorToInt(element);
