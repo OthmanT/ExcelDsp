@@ -1,4 +1,4 @@
-﻿using ExcelDsp.Painter.Tool;
+﻿using ExcelDsp.Painter.Tools;
 using HarmonyLib;
 
 namespace ExcelDsp.Painter.Patches;

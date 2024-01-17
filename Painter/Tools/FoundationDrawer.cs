@@ -3,11 +3,12 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-namespace ExcelDsp.Painter.Tool;
+namespace ExcelDsp.Painter.Tools;
 
 /// <summary>Draws foundation tiles</summary>
 internal static class FoundationDrawer
 {
+    private const float TileRadius = 0.990946f;
     private static Vector3? _start;
 
     /// <summary>Whether this is currently enabled, overriding the vanilla foundation logic</summary>
@@ -26,7 +27,7 @@ internal static class FoundationDrawer
 
         reformTool.controller.cmd = reformTool.controller.cmd with
         {
-            test = reformTool.cursorTarget,
+            test = target,
             target = reformTool.cursorTarget,
             state = reformTool.cursorValid ? 1 : 0,
         };
@@ -36,6 +37,12 @@ internal static class FoundationDrawer
     /// <param name="reformTool">Vanilla foundation build tool</param>
     public static void UpdateAction(BuildTool_Reform reformTool)
     {
+        if(VFInput.onGUIOperate)
+            return;
+
+        UICursor.SetCursor(ECursor.Reform);
+        string? info = null;
+
         if(_start.HasValue)
         {
             if(VFInput.rtsCancel.onDown)
@@ -43,30 +50,33 @@ internal static class FoundationDrawer
                 Reset(reformTool);
                 VFInput.UseMouseRight();
             }
-            else
+            else if(reformTool.cursorValid)
             {
                 SelectRange(reformTool, _start.Value, reformTool.cursorTarget, UseShortestPath);
+
+                if(VFInput._buildConfirm.onDown)
+                {
+                    ApplyReform(reformTool);
+                    Reset(reformTool);
+                }
+                else
+                {
+                    int indices = reformTool.cursorIndices.Count(i => i > 0);
+                    info = $"Selected area: {indices}";
+                }
             }
         }
         else if(reformTool.cursorValid && VFInput._buildConfirm.onDown)
         {
             _start = reformTool.cursorTarget;
         }
-
-        if(!VFInput.onGUIOperate)
+        else
         {
-            UICursor.SetCursor(ECursor.Reform);
-
-            if(reformTool.cursorValid)
-            {
-                // string info = $"C: {reformTool.brushColor}, T: {reformTool.brushType}, S: {reformTool.brushSize}, D: {reformTool.brushDecalType}";
-                int zero = reformTool.cursorIndices.Count(i => i == 0);
-                int neg = reformTool.cursorIndices.Count(i => i < 0);
-                int pos = reformTool.cursorIndices.Count(i => i > 0);
-                string info = $"Point: {reformTool.cursorPointCount}, Pos: {pos}, Neg: {neg}, Zero: {zero}";
-                reformTool.actionBuild.model.cursorText = info;
-            }
+            info = "Select starting point";
         }
+
+        if(info != null)
+            reformTool.actionBuild.model.cursorText = info;
     }
 
     /// <summary>Reset to initial state</summary>
@@ -79,7 +89,10 @@ internal static class FoundationDrawer
     }
 
     private static void SelectRange(BuildTool_Reform reformTool, Vector3 start, Vector3 end, bool useShortestPath)
-        => reformTool.cursorPointCount = reformTool.planet.aux.ReformSnapRect(start, end, useShortestPath, ref reformTool.cursorPoints, ref reformTool.cursorIndices, out reformTool.cursorTarget);
+    {
+        reformTool.cursorPointCount = reformTool.planet.aux.ReformSnapRect(start, end, useShortestPath, ref reformTool.cursorPoints, ref reformTool.cursorIndices, out reformTool.cursorTarget);
+        reformTool.reformCenterPoint = reformTool.cursorTarget;
+    }
 
     private static bool Raycast(Ray ray, out Vector3 target)
     {
@@ -102,5 +115,33 @@ internal static class FoundationDrawer
 
         target = hitInfo.point;
         return true;
+    }
+
+    private static void ApplyReform(BuildTool_Reform reformTool)
+    {
+        VFAudio.Create("reform-terrain", null, reformTool.reformCenterPoint, true, 4);
+
+        reformTool.factory.ComputeFlattenTerrainReform(reformTool.cursorPoints, reformTool.cursorTarget, reformTool.planet.realRadius, reformTool.cursorPointCount);
+
+        for(int i = 0; i < reformTool.cursorPointCount; i++)
+        {
+            Vector3 cursorPoint = reformTool.cursorPoints[i];
+            reformTool.factory.FlattenTerrainReform(cursorPoint, TileRadius, 1, reformTool.buryVeins);
+        }
+
+        PlatformSystem platformSystem = reformTool.factory.platformSystem;
+        foreach(int cursorIndex in reformTool.cursorIndices)
+        {
+            if(cursorIndex < 0)
+                continue;
+
+            int reformType = platformSystem.GetReformType(cursorIndex);
+            int reformColor = platformSystem.GetReformColor(cursorIndex);
+            if(reformType != reformTool.brushType || reformColor != reformTool.brushColor)
+            {
+                platformSystem.SetReformType(cursorIndex, reformTool.brushType);
+                platformSystem.SetReformColor(cursorIndex, reformTool.brushColor);
+            }
+        }
     }
 }

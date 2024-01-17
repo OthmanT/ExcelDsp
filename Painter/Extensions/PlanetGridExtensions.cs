@@ -17,7 +17,9 @@ internal static class PlanetGridExtensions
     /// <returns>Number of valid <paramref name="reformPoints"/></returns>
     public static int ReformSnapRect(this PlanetGrid grid, PlatformSystem platform, Vector3 startPos, Vector3 endPos, bool useShortestPath, ref Vector3[] reformPoints, ref int[] reformIndices, out Vector3 reformCenter)
     {
+        platform.EnsureReformData();
         float latSegmentMax = platform.latitudeCount / 10;
+
         int indexCount = 0;
         int pointCount = 0;
 
@@ -35,7 +37,7 @@ internal static class PlanetGridExtensions
             isFirst = false;
         }
 
-        reformCenter = start.CalculatePosition();
+        reformCenter = end.CalculatePosition();
         return pointCount;
     }
 

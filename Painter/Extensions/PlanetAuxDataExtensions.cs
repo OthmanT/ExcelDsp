@@ -16,16 +16,13 @@ internal static class PlanetAuxDataExtensions
     /// <returns>Number of valid <paramref name="reformPoints"/></returns>
     public static int ReformSnapRect(this PlanetAuxData aux, Vector3 startPos, Vector3 endPos, bool useShortestPath, ref Vector3[] reformPoints, ref int[] reformIndices, out Vector3 reformCenter)
     {
-        int num = aux.mainGrid.ReformSnapRect(aux.planet.factory.platformSystem, startPos, endPos, useShortestPath, ref reformPoints, ref reformIndices, out reformCenter);
-        float num2 = aux.planet.radius + 0.2f;
-        for(int i = 0; i < num; i++)
-        {
-            reformPoints[i].x *= num2;
-            reformPoints[i].y *= num2;
-            reformPoints[i].z *= num2;
-        }
+        int pointCount = aux.mainGrid.ReformSnapRect(aux.planet.factory.platformSystem, startPos, endPos, useShortestPath, ref reformPoints, ref reformIndices, out reformCenter);
+        float radius = aux.planet.radius + 0.2f;
 
-        reformCenter *= num2;
-        return num;
+        for(int i = 0; i < pointCount; i++)
+            reformPoints[i] *= radius;
+
+        reformCenter *= radius;
+        return pointCount;
     }
 }
