@@ -121,13 +121,16 @@ internal static class FoundationDrawer
     {
         VFAudio.Create("reform-terrain", null, reformTool.reformCenterPoint, true, 4);
 
-        reformTool.factory.ComputeFlattenTerrainReform(reformTool.cursorPoints, reformTool.cursorTarget, reformTool.planet.realRadius, reformTool.cursorPointCount);
+        reformTool.factory.BeginFlattenTerrain();
+        Bounds tileBounds = new(Vector3.zero, Vector3.one * TileRadius * 2);
 
         for(int i = 0; i < reformTool.cursorPointCount; i++)
         {
             Vector3 cursorPoint = reformTool.cursorPoints[i];
-            reformTool.factory.FlattenTerrainReform(cursorPoint, TileRadius, 1, reformTool.buryVeins);
+            reformTool.factory.FlattenTerrain(cursorPoint, Quaternion.identity, tileBounds, removeVein: reformTool.buryVeins, lift: true, autoRefresh: false);
         }
+
+        reformTool.factory.EndFlattenTerrain(true);
 
         PlatformSystem platformSystem = reformTool.factory.platformSystem;
         foreach(int cursorIndex in reformTool.cursorIndices)
