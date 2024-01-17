@@ -26,7 +26,7 @@ internal static class PlanetGridExtensions
 
         GridTile start = GridTile.FromPosition(grid, startPos);
         GridTile end = GridTile.FromPosition(grid, endPos);
-        if(!end.IsValid(latSegmentMax))
+        if(!end.Longitude.IsValid || !end.LatitudeRow.IsValid(latSegmentMax))
             end = start;
 
         bool isFirst = true;
@@ -34,7 +34,11 @@ internal static class PlanetGridExtensions
         Range latRange = Range.Create(start.Latitude.Element, end.Latitude.Element);
         for(int latElement = latRange.Min; latElement <= latRange.Max; latElement++)
         {
-            AddLatitude(grid, platform, latSegmentMax, start, end, latElement, useShortestPath, isFirst, ref isWide, ref reformPoints, ref reformIndices, ref indexCount, ref pointCount);
+            GridRow row = GridRow.FromLatitudeElement(grid, latElement);
+            if(!row.IsValid(latSegmentMax))
+                continue;
+
+            AddRow(platform, row, start, end, useShortestPath, isFirst, ref isWide, ref reformPoints, ref reformIndices, ref indexCount, ref pointCount);
             isFirst = false;
         }
 
@@ -53,16 +57,13 @@ internal static class PlanetGridExtensions
         return segments;
     }
 
-    private static void AddLatitude(PlanetGrid grid, PlatformSystem platform, float latSegmentMax, GridTile start, GridTile end, int latElement, bool useShortestPath, bool isFirst, ref bool isWide, ref Vector3[] reformPoints, ref int[] reformIndices, ref int indexCount, ref int pointCount)
+    private static void AddRow(PlatformSystem platform, GridRow row, GridTile start, GridTile end, bool useShortestPath, bool isFirst, ref bool isWide, ref Vector3[] reformPoints, ref int[] reformIndices, ref int indexCount, ref int pointCount)
     {
-        if(latElement == 0)
-            return;
-
-        GridTile latStart = GridTile.FromBandAngle(grid, latElement, start.Longitude.Angle);
-        GridTile latEnd = GridTile.FromBandAngle(grid, latElement, end.Longitude.Angle);
+        GridTile latStart = GridTile.FromLongitudeAngle(row, start.Longitude.Angle);
+        GridTile latEnd = GridTile.FromLongitudeAngle(row, end.Longitude.Angle);
 
         Range longRange = Range.Create(latStart.Longitude.Element, latEnd.Longitude.Element);
-        Range fullRange = PolarCoordinate.GetElementRange(latStart.LongitudeSegments);
+        Range fullRange = PolarCoordinate.GetElementRange(row.LongitudeSegments);
 
         // Check if more than half of the total width is selected
         if(isFirst)
@@ -74,30 +75,28 @@ internal static class PlanetGridExtensions
             // Split ranges across the anti-prime-meridian to select the inverse
             Range longRange1 = new(fullRange.Min, longRange.Min);
             Range longRange2 = new(longRange.Max, fullRange.Max);
-            AddLongitudeRange(grid, platform, latSegmentMax, latElement, longRange1, ref reformPoints, ref reformIndices, ref indexCount, ref pointCount);
-            AddLongitudeRange(grid, platform, latSegmentMax, latElement, longRange2, ref reformPoints, ref reformIndices, ref indexCount, ref pointCount);
+            AddLongitudeRange(platform, row, longRange1, ref reformPoints, ref reformIndices, ref indexCount, ref pointCount);
+            AddLongitudeRange(platform, row, longRange2, ref reformPoints, ref reformIndices, ref indexCount, ref pointCount);
         }
         else
         {
             // Use selection as-is
-            AddLongitudeRange(grid, platform, latSegmentMax, latElement, longRange, ref reformPoints, ref reformIndices, ref indexCount, ref pointCount);
+            AddLongitudeRange(platform, row, longRange, ref reformPoints, ref reformIndices, ref indexCount, ref pointCount);
         }
     }
 
-    private static void AddLongitudeRange(PlanetGrid grid, PlatformSystem platform, float latSegmentMax, int latElement, Range longRange, ref Vector3[] reformPoints, ref int[] reformIndices, ref int indexCount, ref int pointCount)
+    private static void AddLongitudeRange(PlatformSystem platform, GridRow row, Range longRange, ref Vector3[] reformPoints, ref int[] reformIndices, ref int indexCount, ref int pointCount)
     {
         for(int longElement = longRange.Min; longElement <= longRange.Max; longElement++)
         {
-            GridTile tile = GridTile.FromElement(grid, latElement, longElement);
-            AddTile(platform, latSegmentMax, ref reformPoints, ref reformIndices, ref indexCount, ref pointCount, tile);
+            GridTile tile = GridTile.FromLongitudeElement(row, longElement);
+            if(tile.Longitude.IsValid)
+                AddTile(platform, tile, ref reformPoints, ref reformIndices, ref indexCount, ref pointCount);
         }
     }
 
-    private static void AddTile(PlatformSystem platform, float latSegmentMax, ref Vector3[] reformPoints, ref int[] reformIndices, ref int indexCount, ref int pointCount, GridTile tile)
+    private static void AddTile(PlatformSystem platform, GridTile tile, ref Vector3[] reformPoints, ref int[] reformIndices, ref int indexCount, ref int pointCount)
     {
-        if(!tile.IsValid(latSegmentMax))
-            return;
-
         int reformIndex = platform.GetReformIndexForSegment(tile.Latitude.Segment, tile.Longitude.Segment);
         ResizableArray.AddItem(ref reformIndices, ref indexCount, reformIndex);
 

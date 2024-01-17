@@ -1,68 +1,32 @@
-﻿using ExcelDsp.Painter.Extensions;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace ExcelDsp.Painter.Grids;
 
 /// <summary>Single tile on a <see cref="PlanetGrid"/></summary>
-internal struct GridTile
+internal class GridTile(GridRow row, PolarCoordinate longitude)
 {
-    /// <summary>Latitude (north/south) coordinate</summary>
-    public PolarCoordinate Latitude;
+    /// <summary><see cref="GridRow"/> corresponding to the latitude (north/south) coordinate</summary>
+    public readonly GridRow LatitudeRow = row;
 
     /// <summary>Longitude (east/west) coordinate)</summary>
-    public PolarCoordinate Longitude;
+    public readonly PolarCoordinate Longitude = longitude;
 
-    /// <summary>Number of longitude <see cref="PolarCoordinate.Segment"/> values at the current latitude</summary>
-    /// <remarks>Largest at equator, decreasing towards each pole</remarks>
-    public int LongitudeSegments;
+    /// <summary>Latitude (north/south) coordinate</summary>
+    public PolarCoordinate Latitude => LatitudeRow.Latitude;
 
-    /// <summary>Calculate from <see cref="PolarCoordinate.Angle"/>s</summary>
-    /// <param name="grid"><see cref="PlanetGrid"/></param>
-    /// <param name="latAngle">Latitude <see cref="PolarCoordinate.Angle"/></param>
+    /// <summary>Calculate from longitude <see cref="PolarCoordinate.Angle"/></summary>
+    /// <param name="row"><see cref="GridRow"/></param>
     /// <param name="longAngle">Longitude <see cref="PolarCoordinate.Angle"/></param>
     /// <returns>New <see cref="GridTile"/></returns>
-    public static GridTile FromAngle(PlanetGrid grid, float latAngle, float longAngle)
-    {
-        GridTile tile = new()
-        {
-            Latitude = PolarCoordinate.FromAngle(latAngle, grid.segment)
-        };
-        tile.LongitudeSegments = grid.CalculateLongitudeSegments(tile.Latitude.Segment);
-        tile.Longitude = PolarCoordinate.FromAngle(longAngle, tile.LongitudeSegments);
-        return tile;
-    }
+    public static GridTile FromLongitudeAngle(GridRow row, float longAngle)
+        => new(row, PolarCoordinate.FromAngle(longAngle, row.LongitudeSegments));
 
-    /// <summary>Calculate from <see cref="PolarCoordinate.Element"/>s</summary>
-    /// <param name="grid"><see cref="PlanetGrid"/></param>
-    /// <param name="latElement">Latitude <see cref="PolarCoordinate.Element"/></param>
+    /// <summary>Calculate from longitude <see cref="PolarCoordinate.Element"/></summary>
+    /// <param name="row"><see cref="GridRow"/></param>
     /// <param name="longElement">Longitude <see cref="PolarCoordinate.Element"/></param>
     /// <returns>New <see cref="GridTile"/></returns>
-    public static GridTile FromElement(PlanetGrid grid, int latElement, int longElement)
-    {
-        GridTile tile = new()
-        {
-            Latitude = PolarCoordinate.FromElement(latElement, grid.segment)
-        };
-        tile.LongitudeSegments = grid.CalculateLongitudeSegments(tile.Latitude.Segment);
-        tile.Longitude = PolarCoordinate.FromElement(longElement, tile.LongitudeSegments);
-        return tile;
-    }
-
-    /// <summary>Calculate from a latitude <see cref="PolarCoordinate.Element"/> (band) and longitude angle</summary>
-    /// <param name="grid"><see cref="PlanetGrid"/></param>
-    /// <param name="latElement">Latitude <see cref="PolarCoordinate.Element"/></param>
-    /// <param name="longAngle">Longitude <see cref="PolarCoordinate.Angle"/></param>
-    /// <returns>New <see cref="GridTile"/></returns>
-    public static GridTile FromBandAngle(PlanetGrid grid, int latElement, float longAngle)
-    {
-        GridTile tile = new()
-        {
-            Latitude = PolarCoordinate.FromElement(latElement, grid.segment)
-        };
-        tile.LongitudeSegments = grid.CalculateLongitudeSegments(tile.Latitude.Segment);
-        tile.Longitude = PolarCoordinate.FromAngle(longAngle, tile.LongitudeSegments);
-        return tile;
-    }
+    public static GridTile FromLongitudeElement(GridRow row, int longElement)
+        => new(row, PolarCoordinate.FromElement(longElement, row.LongitudeSegments));
 
     /// <summary>Calculate from a planetary position</summary>
     /// <param name="grid"><see cref="PlanetGrid"/></param>
@@ -73,12 +37,14 @@ internal struct GridTile
         Vector3 normalized = position.normalized;
         float latAngle = Mathf.Asin(normalized.y);
         float longAngle = Mathf.Atan2(normalized.x, 0f - normalized.z);
-        return FromAngle(grid, latAngle, longAngle);
+
+        GridRow row = GridRow.FromLatitudeAngle(grid, latAngle);
+        return FromLongitudeAngle(row, longAngle);
     }
 
     /// <summary>Calculate the planetary position</summary>
     /// <returns>Position relative to the planet's center</returns>
-    public readonly Vector3 CalculatePosition()
+    public Vector3 CalculatePosition()
     {
         float latSin = Mathf.Sin(Latitude.Angle);
         float latCos = Mathf.Cos(Latitude.Angle);
@@ -87,18 +53,7 @@ internal struct GridTile
         return new Vector3(latCos * longSin, latSin, latCos * (0f - longCos));
     }
 
-    /// <summary>Check if the coordinates are valid</summary>
-    /// <param name="latSegmentMax">Maximum latitude segment value</param>
-    /// <returns>Whether this represents a usable tile on the grid</returns>
-    public readonly bool IsValid(float latSegmentMax)
-    {
-        return Latitude.Segment < latSegmentMax
-            && Latitude.Segment > -latSegmentMax
-            && Latitude.Element != 0
-            && Longitude.Element != 0;
-    }
-
     /// <inheritdoc />
-    public override readonly string ToString()
+    public override string ToString()
         => $"({Latitude.Element},{Longitude.Element})";
 }

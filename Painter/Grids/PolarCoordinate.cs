@@ -4,7 +4,7 @@ using UnityEngine;
 namespace ExcelDsp.Painter.Grids;
 
 /// <summary>One co-ordinate (of two) for a <see cref="GridTile"/></summary>
-internal struct PolarCoordinate
+internal readonly struct PolarCoordinate(float angle, int element)
 {
     private const int ElementsPerSegment = 5;
     private const float SegmentOffset = -0.1f;
@@ -12,7 +12,7 @@ internal struct PolarCoordinate
 
     /// <summary>Polar angle (latitude or longitude) in radians</summary>
     /// <remarks>Relative to equator or prime-meridian</remarks>
-    public float Angle;
+    public readonly float Angle = angle;
 
     /// <summary>Fractional coordinates used by DSP grid</summary>
     /// <remarks>
@@ -21,7 +21,7 @@ internal struct PolarCoordinate
     ///     - 0.1 per sub-element
     ///     - Ranges from -N to N, skipping 0
     /// </remarks>
-    public float Segment;
+    public readonly float Segment = ElementToSegment(element);
 
     /// <summary>Grid tile index</summary>
     /// <remarks>
@@ -29,7 +29,10 @@ internal struct PolarCoordinate
     ///     - Zero is the prime-meridian or equator and is not a valid tile
     ///     - Ranges from -N to N, skipping 0
     /// </remarks>
-    public int Element;
+    public readonly int Element = element;
+
+    /// <summary>Whether this represents a usable tile on the grid</summary>
+    public readonly bool IsValid => Element != 0;
 
     /// <summary>Calculate from <see cref="Angle"/></summary>
     /// <param name="angle"><see cref="Angle"/></param>
@@ -37,13 +40,8 @@ internal struct PolarCoordinate
     /// <returns>New <see cref="PolarCoordinate"/></returns>
     public static PolarCoordinate FromAngle(float angle, int segments)
     {
-        PolarCoordinate pc = new()
-        {
-            Angle = angle,
-            Element = AngleToElement(angle, segments)
-        };
-        pc.Segment = ElementToSegment(pc.Element);
-        return pc;
+        int element = AngleToElement(angle, segments);
+        return new PolarCoordinate(angle, element);
     }
 
     /// <summary>Calculate from <see cref="Element"/></summary>
@@ -52,13 +50,9 @@ internal struct PolarCoordinate
     /// <returns>New <see cref="PolarCoordinate"/></returns>
     public static PolarCoordinate FromElement(int element, int segments)
     {
-        PolarCoordinate pc = new()
-        {
-            Element = element,
-            Segment = ElementToSegment(element)
-        };
-        pc.Angle = SegmentToAngle(pc.Segment, segments);
-        return pc;
+        float segment = ElementToSegment(element);
+        float angle = SegmentToAngle(segment, segments);
+        return new PolarCoordinate(angle, element);
     }
 
     /// <summary>Get the range of values for <see cref="Element"/></summary>
@@ -83,7 +77,7 @@ internal struct PolarCoordinate
     private static int SegmentToElement(float segment)
     {
         float element = segment * ElementsPerSegment;
-        if (element > 0)
+        if(element > 0)
             return Mathf.CeilToInt(element);
         else
             return Mathf.FloorToInt(element);
