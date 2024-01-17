@@ -1,4 +1,5 @@
 ﻿using ExcelDsp.Painter.Grids;
+using ExcelDsp.Painter.Grids.Ranges;
 using ExcelDsp.Painter.Utility;
 using UnityEngine;
 
@@ -29,17 +30,17 @@ internal static class PlanetGridExtensions
         if(!end.Longitude.IsValid || !end.LatitudeRow.IsValid(latSegmentMax))
             end = start;
 
-        bool isFirst = true;
-        bool isWide = false;
-        Range latRange = Range.Create(start.Latitude.Element, end.Latitude.Element);
-        for(int latElement = latRange.Min; latElement <= latRange.Max; latElement++)
+        SimpleRange latRange = SimpleRange.Create(start.Latitude.Element, end.Latitude.Element);
+        GridTile startRowEnd = GridTile.FromLongitudeAngle(start.LatitudeRow, end.Longitude.Angle);
+        bool invert = CalculatePath(start.LatitudeRow, start, startRowEnd, useShortestPath);
+
+        foreach(int latElement in latRange)
         {
             GridRow row = GridRow.FromLatitudeElement(grid, latElement);
             if(!row.IsValid(latSegmentMax))
                 continue;
 
-            AddRow(platform, row, start, end, useShortestPath, isFirst, ref isWide, ref reformPoints, ref reformIndices, ref indexCount, ref pointCount);
-            isFirst = false;
+            AddRow(platform, row, start, end, invert, ref reformPoints, ref reformIndices, ref indexCount, ref pointCount);
         }
 
         reformCenter = end.CalculatePosition();
@@ -57,37 +58,36 @@ internal static class PlanetGridExtensions
         return segments;
     }
 
-    private static void AddRow(PlatformSystem platform, GridRow row, GridTile start, GridTile end, bool useShortestPath, bool isFirst, ref bool isWide, ref Vector3[] reformPoints, ref int[] reformIndices, ref int indexCount, ref int pointCount)
+    private static bool CalculatePath(GridRow row, GridTile start, GridTile end, bool useShortestPath)
     {
         GridTile latStart = GridTile.FromLongitudeAngle(row, start.Longitude.Angle);
         GridTile latEnd = GridTile.FromLongitudeAngle(row, end.Longitude.Angle);
 
-        Range longRange = Range.Create(latStart.Longitude.Element, latEnd.Longitude.Element);
-        Range fullRange = PolarCoordinate.GetElementRange(row.LongitudeSegments);
+        SimpleRange longRange = SimpleRange.Create(latStart.Longitude.Element, latEnd.Longitude.Element);
+        SimpleRange fullRange = PolarCoordinate.GetElementRange(row.LongitudeSegments);
 
-        // Check if more than half of the total width is selected
-        if(isFirst)
-            isWide = longRange.Width > fullRange.Max;
-
-        // We need to calculate the shortest/longest path to overlay longRange over fullRange
-        if(isWide == useShortestPath)
-        {
-            // Split ranges across the anti-prime-meridian to select the inverse
-            Range longRange1 = new(fullRange.Min, longRange.Min);
-            Range longRange2 = new(longRange.Max, fullRange.Max);
-            AddLongitudeRange(platform, row, longRange1, ref reformPoints, ref reformIndices, ref indexCount, ref pointCount);
-            AddLongitudeRange(platform, row, longRange2, ref reformPoints, ref reformIndices, ref indexCount, ref pointCount);
-        }
-        else
-        {
-            // Use selection as-is
-            AddLongitudeRange(platform, row, longRange, ref reformPoints, ref reformIndices, ref indexCount, ref pointCount);
-        }
+        int midpoint = fullRange.Count / 2;
+        bool isWide = longRange.Count > midpoint;
+        bool invert = isWide == useShortestPath;
+        return invert;
     }
 
-    private static void AddLongitudeRange(PlatformSystem platform, GridRow row, Range longRange, ref Vector3[] reformPoints, ref int[] reformIndices, ref int indexCount, ref int pointCount)
+    private static void AddRow(PlatformSystem platform, GridRow row, GridTile start, GridTile end, bool invert, ref Vector3[] reformPoints, ref int[] reformIndices, ref int indexCount, ref int pointCount)
     {
-        for(int longElement = longRange.Min; longElement <= longRange.Max; longElement++)
+        GridTile latStart = GridTile.FromLongitudeAngle(row, start.Longitude.Angle);
+        GridTile latEnd = GridTile.FromLongitudeAngle(row, end.Longitude.Angle);
+
+        SimpleRange longRangeSimple = SimpleRange.Create(latStart.Longitude.Element, latEnd.Longitude.Element);
+        Range longRange = longRangeSimple;
+
+        if(invert)
+        {
+            // Split range across the anti-prime-meridian to select the inverse
+            SimpleRange fullRange = PolarCoordinate.GetElementRange(row.LongitudeSegments);
+            longRange = longRangeSimple.Invert(fullRange);
+        }
+
+        foreach(int longElement in longRange)
         {
             GridTile tile = GridTile.FromLongitudeElement(row, longElement);
             if(tile.Longitude.IsValid)

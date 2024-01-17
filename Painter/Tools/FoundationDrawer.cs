@@ -136,7 +136,7 @@ internal static class FoundationDrawer
         for(int i = 0; i < reformTool.cursorPointCount; i++)
         {
             Vector3 cursorPoint = reformTool.cursorPoints[i];
-            reformTool.factory.FlattenTerrain(cursorPoint, Quaternion.identity, tileBounds, removeVein: reformTool.buryVeins, lift: true, autoRefresh: false);
+            reformTool.factory.FlattenTerrain(cursorPoint, Quaternion.identity, tileBounds, lift: true, autoRefresh: false);
         }
 
         reformTool.factory.EndFlattenTerrain(true);

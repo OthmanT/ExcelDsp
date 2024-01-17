@@ -1,4 +1,4 @@
-﻿using ExcelDsp.Painter.Utility;
+﻿using ExcelDsp.Painter.Grids.Ranges;
 using UnityEngine;
 
 namespace ExcelDsp.Painter.Grids;
@@ -57,11 +57,11 @@ internal readonly struct PolarCoordinate(float angle, int element)
 
     /// <summary>Get the range of values for <see cref="Element"/></summary>
     /// <returns></returns>
-    public static Range GetElementRange(int segments)
+    public static SimpleRange GetElementRange(int segments)
     {
         int segentMid = segments / 2;
         int elementMid = segentMid * ElementsPerSegment;
-        return new Range(-elementMid, elementMid);
+        return new SimpleRange(-elementMid, elementMid);
     }
 
     private static int AngleToElement(float angle, int segments)
