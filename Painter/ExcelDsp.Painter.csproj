@@ -55,4 +55,8 @@ public static partial class Shared
 		<Message Importance="high" Condition="Exists($(ModOutputFolder))" Text="Updating mod output folder" File="$(ModOutputFolder)" />
 		<Copy Condition="Exists($(ModOutputFolder))" SourceFiles="$(TargetPath)" DestinationFolder="$(ModOutputFolder)" />
 	</Target>
+
+	<ProjectExtensions>
+		<VisualStudio><UserProperties manifest_1json__JsonSchema="https://dsp.thunderstore.io/package/create/docs/" /></VisualStudio>
+	</ProjectExtensions>
 </Project>

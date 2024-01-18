@@ -1,0 +1,10 @@
+{
+	"name": "FoundationPainter",
+	"version_number": "0.3.0",
+	"website_url": "https://github.com/excelkobayashi/ExcelDsp",
+	"description": "Draw foundations using rectangles",
+	"dependencies":
+	[
+		"xiaoye97-BepInEx-5.4.17"
+	]
+}
