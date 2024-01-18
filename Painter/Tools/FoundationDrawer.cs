@@ -1,4 +1,4 @@
-﻿using ExcelDsp.Painter.Extensions;
+﻿using ExcelDsp.Painter.Grids;
 using System;
 using System.Linq;
 using UnityEngine;
@@ -10,6 +10,7 @@ internal static class FoundationDrawer
 {
     private const float TileRadius = 0.990946f;
     private static Vector3? _start;
+    private static readonly GridRectangle _rect = new();
 
     /// <summary>Whether this is currently enabled, overriding the vanilla foundation logic</summary>
     public static bool IsEnabled { get; set; }
@@ -91,7 +92,8 @@ internal static class FoundationDrawer
 
     private static void SelectRange(BuildTool_Reform reformTool, Vector3 start, Vector3 end, bool useShortestPath)
     {
-        reformTool.cursorPointCount = reformTool.planet.aux.ReformSnapRect(start, end, useShortestPath, ref reformTool.cursorPoints, ref reformTool.cursorIndices, out reformTool.cursorTarget);
+        _rect.Calculate(reformTool.planet, start, end, useShortestPath);
+        _rect.Export(ref reformTool.cursorIndices, ref reformTool.cursorPoints, out reformTool.cursorPointCount, out reformTool.cursorTarget);
         reformTool.reformCenterPoint = reformTool.cursorTarget;
     }
 

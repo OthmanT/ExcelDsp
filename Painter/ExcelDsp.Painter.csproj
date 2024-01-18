@@ -5,7 +5,7 @@
 		<AssemblyName>ExcelDsp.Painter</AssemblyName>
 		<BepInExPluginGuid>055eeac2-b236-46ae-9ced-26f582094ead</BepInExPluginGuid>
 		<Description>DSP plugin to easily paint foundations</Description>
-		<Version>0.2</Version>
+		<Version>0.2.1</Version>
 		<ModOutputFolder>$(AppData)\r2modmanPlus-local\DysonSphereProgram\profiles\Dev\BepInEx\plugins\Excel-ExcelDsp.Painter</ModOutputFolder>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
