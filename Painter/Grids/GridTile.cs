@@ -3,6 +3,7 @@
 namespace ExcelDsp.Painter.Grids;
 
 /// <summary>Single tile on a <see cref="PlanetGrid"/></summary>
+/// <remarks>Based on <see cref="PlanetGrid.ReformSnapTo"/></remarks>
 internal class GridTile(GridRow row, PolarCoordinate longitude)
 {
     /// <summary><see cref="GridRow"/> corresponding to the latitude (north/south) coordinate</summary>

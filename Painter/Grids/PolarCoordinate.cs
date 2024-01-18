@@ -4,6 +4,7 @@ using UnityEngine;
 namespace ExcelDsp.Painter.Grids;
 
 /// <summary>One co-ordinate (of two) for a <see cref="GridTile"/></summary>
+/// <remarks>Based on <see cref="PlanetGrid.ReformSnapTo"/></remarks>
 internal readonly struct PolarCoordinate(float angle, int element)
 {
     private const int ElementsPerSegment = 5;

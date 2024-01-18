@@ -9,6 +9,7 @@ internal static class PlanetGridExtensions
     /// <param name="grid"><see cref="PlanetGrid"/></param>
     /// <param name="latSegment">Latitude <see cref="PolarCoordinate.Segment"/></param>
     /// <returns>Number of longitude <see cref="PolarCoordinate.Segment"/></returns>
+    /// <remarks>Based on <see cref="PlanetGrid.ReformSnapTo"/></remarks>
     public static int CalculateLongitudeSegments(this PlanetGrid grid, float latSegment)
     {
         int latIndex = Mathf.FloorToInt(Mathf.Abs(latSegment));

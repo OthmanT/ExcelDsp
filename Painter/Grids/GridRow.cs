@@ -5,6 +5,7 @@ namespace ExcelDsp.Painter.Grids;
 /// <summary>Calculate from <see cref="PolarCoordinate"/></summary>
 /// <param name="grid"><see cref="PlanetGrid"/></param>
 /// <param name="latitude">Latitude <see cref="PolarCoordinate"/></param>
+/// <remarks>Based on <see cref="PlanetGrid.ReformSnapTo"/></remarks>
 internal class GridRow(PlanetGrid grid, PolarCoordinate latitude)
 {
     /// <summary>Latitude (north/south) coordinate</summary>

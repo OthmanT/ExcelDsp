@@ -6,6 +6,7 @@ using UnityEngine;
 namespace ExcelDsp.Painter.Grids;
 
 /// <summary>Rectangular selection of <see cref="GridTile"/></summary>
+/// <remarks>Based on <see cref="PlanetGrid.ReformSnapTo"/></remarks>
 internal class GridRectangle
 {
     private readonly List<GridTile> _tiles = [];
