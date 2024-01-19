@@ -32,5 +32,6 @@ Mod for Dyson Sphere Program that allows drawing foundations using rectangles.
 - Border thickness
 - UI buttons
 - More configuration
+- Restore original brush size
 - Handle Dark Fog special cases
 - Burying/unburying veins
