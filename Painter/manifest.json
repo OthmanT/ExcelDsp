@@ -1,6 +1,6 @@
 {
 	"name": "FoundationPainter",
-	"version_number": "0.3.1",
+	"version_number": "0.3.2",
 	"website_url": "https://github.com/excelkobayashi/ExcelDsp",
 	"description": "Draw foundations using rectangles",
 	"dependencies":
