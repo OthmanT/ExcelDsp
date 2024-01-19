@@ -12,19 +12,22 @@ Mod for Dyson Sphere Program that allows drawing foundations using rectangles.
 4. Click `Start modded`
 
 ## Usage
-1. Start placing foundations
-2. Enable drawing mode (default Ctrl+D)
+1. Start placing foundations (reformation mode)
+2. Toggle the drawing mode to enable the mod (default Ctrl+D)
 3. Click to select starting corner point
-4. Optionally, swap between shortest and longest path (default Ctrl+P)
+4. Optionally, swap between shortest and longest longitudinal path (default Ctrl+P)
+   - Longest mode is for drawing very wide rectangles, or even entire latitude bands
 5. Click to select ending corner point
 
 ## Notes and Limitations
-- Very large selection areas are supported, but the game's code is not designed for it so expect low framerates while making the selection.
+- Does not affect achievements or milestones
+- Very large selection areas are supported but the game's rendering is not optimized for it, so low framerates may occur while making extremely large selections
+  - Make multiple smaller selections instead if the framerate drops
 - Soil piles are calculated using the standard game logic, but the numbers may appear slightly different from the default foundation tool applied to the same area because:
   - The calculation is path dependent, so the same end result can give different numbers depending on which order the tiles are updated
   - This tool gives perfectly straight edges, while the built in tool uses a circular radius, resulting in slightly different edges
 - Special logic in the default foundation tool for drawing over Dark Fog bases is not yet implemented
-- Burying/unburying ore veins is not yet implemented
+- Burying/unburying ore veins is not yet implemented; switch back to the default tool for this
 
 ## Planned Features
 - Border drawing modes (border only, border + fill, fill only)
