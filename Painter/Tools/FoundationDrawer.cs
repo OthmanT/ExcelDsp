@@ -159,7 +159,7 @@ internal static class FoundationDrawer
             return 0;
 
         int rawSandCount = factory.EndComputeFlattenTerrain();
-        int neededSand = reformTool.GetNeedSandCountByInc(reformTool.handItem.ID, reformTool.cursorPointCount, rawSandCount);
+        int neededSand = reformTool.GetNeedSandCountByInc(reformTool.handItem.ID, reformTool.cursorPointCount, rawSandCount, rawSandCount);
         return neededSand;
     }
 
@@ -215,11 +215,17 @@ internal static class FoundationDrawer
         long remainingSand = player.sandCount - neededSand;
 
         player.SetSandCount(remainingSand);
-        reformTool.SetHistorySandGotFeature(-neededSand);
+
+        int num = GameMain.data.history.GetFeatureValue(2130001);
+        num += neededSand;
+        if (num < 0) {
+            num = 0;
+        }
+        GameMain.data.history.SetFeatureValue(2130001, num);
     }
 
     private static void EndFlattenTerrain(BuildTool_Reform reformTool)
-        => reformTool.factory.EndFlattenTerrain(true);
+        => reformTool.factory.EndFlattenTerrain();
 
     private static void SetReformProps(BuildTool_Reform reformTool)
     {

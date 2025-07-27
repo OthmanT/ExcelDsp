@@ -11,7 +11,7 @@ namespace ExcelDsp.Painter.Patches;
 internal class UIBuildingGrid_Patch
 {
     /// <summary>Before each update action when foundation cursor is active</summary>
-    [HarmonyTranspiler, HarmonyPatch(nameof(UIBuildingGrid.Update))]
+    [HarmonyTranspiler, HarmonyPatch("Update")]
     public static IEnumerable<CodeInstruction> Update_Transpiler(IEnumerable<CodeInstruction> instructions)
     {
         // Patch to use the full array size, instead of subset of the array corresponding to the brush size;

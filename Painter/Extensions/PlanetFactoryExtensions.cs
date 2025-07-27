@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using ExcelDsp.Painter.Patches;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ExcelDsp.Painter.Extensions;
@@ -16,7 +17,7 @@ internal static class PlanetFactoryExtensions
         PlanetRawData planetRaw = planet.data;
         int totalSand = 0;
 
-        foreach(KeyValuePair<int, int> change in factory.tmp_levelChanges)
+        foreach(KeyValuePair<int, int> change in PlanetFactory_Patch.TmpLevelChanges)
         {
             int vertexIndex = change.Key;
             int newLevel = change.Value;
